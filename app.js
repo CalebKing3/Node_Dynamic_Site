@@ -10,7 +10,7 @@ http.createServer(function(request, response) {
         response.write(new Date() + "\n");
     }, 1000);
     response.write("This is before the end\n");
-    response.end('Hello World\n');
+    //response.end('Hello World\n');
     response.write("This is after the end\n")
 }).listen(1337);
 console.log('Server running at http://127.0.0.1:1337/');
