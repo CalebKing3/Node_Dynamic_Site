@@ -1,62 +1,87 @@
 var Profile = require("./profile.js");
-var renderer = require("./renderer.js")
+var renderer = require("./renderer.js");
+var querystring = require("querystring");
 
+var commonHeaders = {'Content-Type': 'text/html'};
+
+//Handle HTTP route GET / and POST / i.e. Home
 function home(request, response) {
-    // if url == "/" && GET
-    if (request.url === "/") {
-        //show search
-        response.writeHead(200, {'Content-Type': 'text/plain'});
-        renderer.view("header", {}, response);
-        renderer.view("search", {}, response);
-        renderer.view('footer', {}, response);
-        response.end();
+    //if url == "/" && GET
+    if(request.url === "/") {
+        if (request.method.toLowerCase() === "get") {
+            //show search
+            response.writeHead(200, commonHeaders);
+            renderer.view("header", {}, response);
+            renderer.view("search", {}, response);
+            renderer.view("footer", {}, response);
+            response.end();
+        } else{
+            //if url == "/" && POST
+
+            //get the post data from body
+            request.on("data", function(postBody) {
+                var body = "" + postBody;
+                console.log(postBody.toString());
+                //extract the username
+                var query = querystring.parse(postBody.toString());
+                response.writeHead(303, {Location : "/" + query.username});
+                response.end();
+            });
+
+        }
     }
-    // if url == "/" && POST
-    // redirect to /:username
 }
 
-//3. Handle HTTP route GET /:username i.e. /calebking3
+//Handle HTTP route GET /:username i.e. /chalkers
 function user(request, response) {
-    // if url == "/...."
+    //if url == "/...."
     var username = request.url.replace("/", "");
-    if (username.length > 0){
-        response.writeHead(200, {'Content-Type': 'text/plain'});
+    if(username.length > 0) {
+        response.writeHead(200, commonHeaders);
         renderer.view("header", {}, response);
 
-        // get json from treehouse
+        //get json from Treehouse
         var studentProfile = new Profile(username);
-        // on "end"
+        //on "end"
         studentProfile.on("end", function(profileJSON){
-            // show profile
+            //show profile
 
+            //Store the values which we need
             var values = {
                 avatarUrl: profileJSON.gravatar_url,
                 username: profileJSON.profile_name,
                 badges: profileJSON.badges.length,
                 javascriptPoints: profileJSON.points.JavaScript
             }
-            // simple response
-            renderer.view("profile" + values, response);
-            renderer.view("footer" + {}, response);
+            //Simple response
+            renderer.view("profile", values, response);
+            renderer.view("footer", {}, response);
             response.end();
         });
 
-        // on "error"
+        //on "error"
         studentProfile.on("error", function(error){
+            //show error
             renderer.view("error", {errorMessage: error.message}, response);
             renderer.view("search", {}, response);
             renderer.view("footer", {}, response);
             response.end();
         });
 
-
-        //get json from Treehouse
-        // on "end"
-        // show profile
-        // on "error"
-        // show error
     }
 }
 
 module.exports.home = home;
 module.exports.user = user;
+
+
+
+
+
+
+
+
+
+
+
+
